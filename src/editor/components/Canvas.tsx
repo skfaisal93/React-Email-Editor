@@ -1,6 +1,6 @@
 // src/editor/components/Canvas.tsx
 import * as React from "react";
-import { Box, Paper, Typography, IconButton, Button } from "@mui/material";
+import { Box, Paper, Typography, IconButton } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import { useEditorStore } from "../state/store";
@@ -29,15 +29,47 @@ export function Canvas() {
     };
 
     const section = doc.sections[0];
-    const container = section.containers[0];
+    if (!section) {
+        return (
+            <Box
+                onMouseDownCapture={onCanvasMouseDownCapture}
+                sx={{
+                    flex: 1,
+                    height: "100%",
+                    overflow: "auto",
+                    bgcolor: "common.white",
+                }}
+            >
+                <Box
+                    sx={{
+                        py: 4,
+                        display: "flex",
+                        justifyContent: "center",
+                        width: "100%",
+                    }}
+                >
+                    <Box sx={{ width: doc.global.bodyWidth, mx: "auto" }}>
+                        <Box ref={surfaceRef}>
+                            <Paper
+                                variant="outlined"
+                                sx={{ p: 3, borderRadius: 0, bgcolor: "common.white" }}
+                            >
+                                <Typography variant="body2" color="text.secondary">
+                                    No sections yet.
+                                </Typography>
+                            </Paper>
+                        </Box>
+                    </Box>
+                </Box>
+            </Box>
+        );
+    }
 
-    const sectionActive = selection.kind === "section";
-    const sectionHover = hover.kind === "section";
+    const sectionActive =
+        selection.kind === "section" && selection.sectionId === section.id;
+    const sectionHover =
+        hover.kind === "section" && hover.sectionId === section.id;
     const showSection = sectionActive || sectionHover;
-
-    const containerActive = selection.kind === "container";
-    const containerHover = hover.kind === "container";
-    const showContainer = containerActive || containerHover;
 
     return (
         <Box
@@ -127,112 +159,130 @@ export function Canvas() {
                                     </IconButton>
                                 }
                             >
-                                <Box sx={{ p: 3, minHeight: 260 }}>
-                                    <Typography
-                                        variant="h6"
-                                        align="center"
-                                        sx={{ mt: 1, mb: 2 }}
-                                        fontWeight={600}
-                                    >
-                                        Design your email here!
-                                    </Typography>
+                                <Box
+                                    sx={{
+                                        p: 3,
+                                        minHeight: 260,
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: 3,
+                                    }}
+                                >
+                                    {section.containers.map((container) => {
+                                        const containerActive =
+                                            selection.kind === "container" &&
+                                            selection.containerId === container.id &&
+                                            selection.sectionId === section.id;
+                                        const containerHover =
+                                            hover.kind === "container" &&
+                                            hover.containerId === container.id &&
+                                            hover.sectionId === section.id;
+                                        const showContainer = containerActive || containerHover;
 
-                                    {/* CONTAINER */}
-                                    <SelectableFrame
-                                        label="CONTAINER"
-                                        active={containerActive}
-                                        show={showContainer}
-                                        color="info"
-                                        onPointerEnter={() =>
-                                            setHover({
-                                                kind: "container",
-                                                sectionId: section.id,
-                                                containerId: container.id,
-                                            })
-                                        }
-                                        onPointerLeave={() =>
-                                            setHover({ kind: "section", sectionId: section.id })
-                                        }
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setSelection({
-                                                kind: "container",
-                                                sectionId: section.id,
-                                                containerId: container.id,
-                                            });
-                                        }}
-                                        topRightControls={
-                                            <IconButton
-                                                size="small"
-                                                sx={{
-                                                    bgcolor: "common.white",
-                                                    border: "1px solid",
-                                                    borderColor: "divider",
-                                                    borderRadius: 1,
-                                                }}
+                                        return (
+                                            <SelectableFrame
+                                                key={container.id}
+                                                label="CONTAINER"
+                                                active={containerActive}
+                                                show={showContainer}
+                                                color="info"
+                                                onPointerEnter={() =>
+                                                    setHover({
+                                                        kind: "container",
+                                                        sectionId: section.id,
+                                                        containerId: container.id,
+                                                    })
+                                                }
+                                                onPointerLeave={() =>
+                                                    setHover({
+                                                        kind: "section",
+                                                        sectionId: section.id,
+                                                    })
+                                                }
                                                 onClick={(e) => {
                                                     e.stopPropagation();
+                                                    setSelection({
+                                                        kind: "container",
+                                                        sectionId: section.id,
+                                                        containerId: container.id,
+                                                    });
                                                 }}
+                                                topRightControls={
+                                                    <IconButton
+                                                        size="small"
+                                                        sx={{
+                                                            bgcolor: "common.white",
+                                                            border: "1px solid",
+                                                            borderColor: "divider",
+                                                            borderRadius: 1,
+                                                        }}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                        }}
+                                                    >
+                                                        <MoreHorizIcon fontSize="small" />
+                                                    </IconButton>
+                                                }
                                             >
-                                                <MoreHorizIcon fontSize="small" />
-                                            </IconButton>
-                                        }
-                                    >
-                                        <Box
-                                            sx={{
-                                                display: "flex",
-                                                gap: 2,
-                                                justifyContent: "center",
-                                                alignItems: "center",
-                                                mt: 2,
-                                            }}
-                                        >
-                                            <Box
-                                                sx={{
-                                                    width: 260,
-                                                    height: 160,
-                                                    border: "1px solid",
-                                                    borderColor: "divider",
-                                                    borderRadius: 1,
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    justifyContent: "center",
-                                                    color: "text.secondary",
-                                                    fontSize: 12,
-                                                }}
-                                            >
-                                                (image)
-                                            </Box>
-
-                                            <Box
-                                                sx={{
-                                                    width: 300,
-                                                    border: "1px solid",
-                                                    borderColor: "divider",
-                                                    p: 2,
-                                                    borderRadius: 1,
-                                                }}
-                                            >
-                                                <Typography fontWeight={700}>
-                                                    Build the way you want
-                                                </Typography>
-                                                <Typography
-                                                    variant="body2"
-                                                    color="text.secondary"
-                                                    sx={{ mt: 1 }}
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        gap: 2,
+                                                        alignItems: "stretch",
+                                                    }}
                                                 >
-                                                    Structures make it easy to create a multi-column look
-                                                    without the hassle…
-                                                </Typography>
-
-                                                <Box sx={{ mt: 2 }}>
-                                                    <Button variant="contained" size="small">
-                                                        Add button text
-                                                    </Button>
+                                                    {container.columns.map((column) => (
+                                                        <Box
+                                                            key={column.id}
+                                                            sx={{
+                                                                flex: 1,
+                                                                minWidth: 0,
+                                                                border: "1px solid",
+                                                                borderColor: "divider",
+                                                                borderRadius: 1,
+                                                                p: 2,
+                                                            }}
+                                                        >
+                                                            {column.blocks.length === 0 ? (
+                                                                <Typography
+                                                                    variant="caption"
+                                                                    color="text.secondary"
+                                                                >
+                                                                    Drop blocks here
+                                                                </Typography>
+                                                            ) : (
+                                                                <Box
+                                                                    sx={{
+                                                                        display: "flex",
+                                                                        flexDirection: "column",
+                                                                        gap: 1,
+                                                                    }}
+                                                                >
+                                                                    {column.blocks.map((block) => {
+                                                                        const text =
+                                                                            block.type === "text" &&
+                                                                            typeof block.data.text ===
+                                                                                "string"
+                                                                                ? block.data.text
+                                                                                : block.type;
+                                                                        return (
+                                                                            <Typography
+                                                                                key={block.id}
+                                                                                variant="body2"
+                                                                                sx={{ wordBreak: "break-word" }}
+                                                                            >
+                                                                                {text}
+                                                                            </Typography>
+                                                                        );
+                                                                    })}
+                                                                </Box>
+                                                            )}
+                                                        </Box>
+                                                    ))}
                                                 </Box>
-                                            </Box>
-                                        </Box>
-                                    </SelectableFrame>
+                                            </SelectableFrame>
+                                        );
+                                    })}
                                 </Box>
                             </SelectableFrame>
                         </Paper>

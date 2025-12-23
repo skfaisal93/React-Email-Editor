@@ -33,9 +33,71 @@ function SidebarTabPanel(props: { value: string; name: string; children: React.R
     return <Box sx={{ p: 1 }}>{children}</Box>;
 }
 
+function StructureTile(props: {
+    label: string;
+    columns: 1 | 2 | 3 | 4;
+    onClick: () => void;
+}) {
+    const { label, columns, onClick } = props;
+
+    return (
+        <Box
+            role="button"
+            onClick={onClick}
+            sx={{
+                border: "1px solid",
+                borderColor: "divider",
+                borderRadius: 1,
+                p: 1,
+                cursor: "pointer",
+                userSelect: "none",
+                "&:hover": {
+                    borderColor: "primary.main",
+                    bgcolor: "action.hover",
+                },
+            }}
+        >
+            <Box sx={{ display: "flex", gap: 0.5, height: 26, mb: 0.5 }}>
+                {Array.from({ length: columns }).map((_, idx) => (
+                    <Box
+                        key={idx}
+                        sx={{
+                            flex: 1,
+                            border: "1px solid",
+                            borderColor: "divider",
+                            borderRadius: 0.5,
+                            bgcolor: "background.paper",
+                        }}
+                    />
+                ))}
+            </Box>
+            <Typography variant="caption" color="text.secondary">
+                {label}
+            </Typography>
+        </Box>
+    );
+}
+
 export function RightSidebar() {
     const tab = useEditorStore((s) => s.activeRightTab);
     const setTab = useEditorStore((s) => s.setRightTab);
+    const doc = useEditorStore((s) => s.doc);
+    const selection = useEditorStore((s) => s.selection);
+    const insertContainerAfter = useEditorStore((s) => s.insertContainerAfter);
+
+    const handleInsertStructure = (columnsCount: 1 | 2 | 3 | 4) => {
+        if (doc.sections.length === 0) return;
+
+        const isContainerSelected = selection.kind === "container";
+        const sectionId = isContainerSelected
+            ? selection.sectionId
+            : doc.sections[0].id;
+        const afterContainerId = isContainerSelected
+            ? selection.containerId
+            : undefined;
+
+        insertContainerAfter({ sectionId, afterContainerId, columnsCount });
+    };
 
     return (
         <Box
@@ -64,20 +126,27 @@ export function RightSidebar() {
                         <Typography variant="subtitle2">Structures</Typography>
                     </AccordionSummary>
                     <AccordionDetails>
-                        {/* Placeholder “structure tiles” like dashed blue boxes */}
-                        <Box sx={{ display: "grid", gap: 1 }}>
-                            {[1, 2, 3, 4, 5, 6].map((i) => (
-                                <Box
-                                    key={i}
-                                    sx={{
-                                        height: 30,
-                                        border: "1px dashed",
-                                        borderColor: "primary.light",
-                                        borderRadius: 1,
-                                        bgcolor: "action.hover",
-                                    }}
-                                />
-                            ))}
+                        <Box sx={{ display: "grid", gap: 1, gridTemplateColumns: "1fr 1fr" }}>
+                            <StructureTile
+                                label="1 column"
+                                columns={1}
+                                onClick={() => handleInsertStructure(1)}
+                            />
+                            <StructureTile
+                                label="2 columns"
+                                columns={2}
+                                onClick={() => handleInsertStructure(2)}
+                            />
+                            <StructureTile
+                                label="3 columns"
+                                columns={3}
+                                onClick={() => handleInsertStructure(3)}
+                            />
+                            <StructureTile
+                                label="4 columns"
+                                columns={4}
+                                onClick={() => handleInsertStructure(4)}
+                            />
                         </Box>
                     </AccordionDetails>
                 </Accordion>
